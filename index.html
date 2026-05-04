@@ -147,7 +147,7 @@
       placeholder="例：令和9年、平成30、昭和64..."
       autocomplete="off"
     >
-    <p class="hint">「令和9年」「令和9」「R9」などの形式に対応</p>
+    <p class="hint">「令和9年」「令和9」「R9」などの形式に対応（入力するたびに変換）</p>
 
     <div class="result-box empty" id="resultBox">
       <p class="result-text" id="resultText">変換結果がここに表示されます</p>
@@ -225,14 +225,8 @@
         `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年`;
     }
 
-    inputEl.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        showResult(convert(inputEl.value));
-      }
-    });
-
     inputEl.addEventListener('input', () => {
-      if (inputEl.value.trim() === '') showResult(null);
+      showResult(convert(inputEl.value));
     });
   </script>
 </body>
