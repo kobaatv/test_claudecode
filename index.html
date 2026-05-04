@@ -174,7 +174,7 @@
   </div>
 
   <script>
-    const VERSION = '1.2.0';
+    const VERSION = '1.3.0';
     const ERAS = [
       { names: ['令和', 'れいわ', 'reiwa', 'r'], start: 2019, end: null,    maxYear: null },
       { names: ['平成', 'へいせい', 'heisei', 'h'], start: 1989, end: 2019,  maxYear: 31  },
@@ -182,6 +182,11 @@
       { names: ['大正', 'たいしょう', 'taisho', 't'], start: 1912, end: 1926, maxYear: 15  },
       { names: ['明治', 'めいじ', 'meiji',  'm'], start: 1868, end: 1912,  maxYear: 45  },
     ];
+
+    function currentEra() {
+      const year = new Date().getFullYear();
+      return ERAS.find(era => era.start <= year && (era.end === null || year < era.end));
+    }
 
     function convert(raw) {
       const input = raw.trim();
@@ -191,6 +196,16 @@
       const normalized = input.replace(/[０-９]/g, c =>
         String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
       );
+
+      // 数字のみの場合は今の年号で補完
+      const numberOnly = normalized.match(/^(\d+)\s*年?$/);
+      if (numberOnly) {
+        const era = currentEra();
+        const eraYear = parseInt(numberOnly[1], 10);
+        if (eraYear < 1) return { error: `${era.names[0]}は1年以上を指定してください` };
+        const western = era.start + eraYear - 1;
+        return { result: western, eraName: era.names[0], eraYear, assumed: true };
+      }
 
       for (const era of ERAS) {
         for (const name of era.names) {
@@ -230,8 +245,10 @@
         return;
       }
       resultBox.className = 'result-box';
-      resultText.textContent =
-        `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年`;
+      const assumed = value.assumed ? `（${value.eraName}${value.eraYear}年と解釈）` : '';
+      resultText.innerHTML =
+        `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年` +
+        (assumed ? `<br><span style="font-size:0.7em;font-weight:400;color:#4a90d9">${assumed}</span>` : '');
     }
 
     document.getElementById('versionLabel').textContent = `v${VERSION}`;
