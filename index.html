@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>年号変換アプリ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      padding: 40px 48px;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #1a202c;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #718096;
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #4a5568;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 1.1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+      color: #1a202c;
+    }
+
+    input[type="text"]:focus {
+      border-color: #4299e1;
+    }
+
+    .hint {
+      font-size: 0.78rem;
+      color: #a0aec0;
+      margin-top: 6px;
+    }
+
+    .result-box {
+      margin-top: 28px;
+      min-height: 80px;
+      background: #ebf8ff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: background 0.3s;
+    }
+
+    .result-box.error {
+      background: #fff5f5;
+    }
+
+    .result-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      text-align: center;
+    }
+
+    .result-box.error .result-text {
+      color: #c53030;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .result-box.empty .result-text {
+      color: #a0aec0;
+      font-size: 0.95rem;
+      font-weight: 400;
+    }
+
+    .era-table {
+      margin-top: 32px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 20px;
+    }
+
+    .era-table p {
+      font-size: 0.8rem;
+      color: #718096;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .era-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .era-item {
+      font-size: 0.78rem;
+      color: #4a5568;
+      background: #f7fafc;
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>年号変換アプリ</h1>
+    <p class="subtitle">元号・年を入力してEnterを押してください</p>
+
+    <label for="input">元号と年を入力</label>
+    <input
+      type="text"
+      id="input"
+      placeholder="例：令和9年、平成30、昭和64..."
+      autocomplete="off"
+    >
+    <p class="hint">「令和9年」「令和9」「R9」などの形式に対応</p>
+
+    <div class="result-box empty" id="resultBox">
+      <p class="result-text" id="resultText">変換結果がここに表示されます</p>
+    </div>
+
+    <div class="era-table">
+      <p>対応している元号</p>
+      <div class="era-list">
+        <div class="era-item">令和 (R) — 2019年〜</div>
+        <div class="era-item">平成 (H) — 1989〜2019年</div>
+        <div class="era-item">昭和 (S) — 1926〜1989年</div>
+        <div class="era-item">大正 (T) — 1912〜1926年</div>
+        <div class="era-item">明治 (M) — 1868〜1912年</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ERAS = [
+      { names: ['令和', 'れいわ', 'reiwa', 'r'], start: 2019, end: null,    maxYear: null },
+      { names: ['平成', 'へいせい', 'heisei', 'h'], start: 1989, end: 2019,  maxYear: 31  },
+      { names: ['昭和', 'しょうわ', 'showa',  's'], start: 1926, end: 1989,  maxYear: 64  },
+      { names: ['大正', 'たいしょう', 'taisho', 't'], start: 1912, end: 1926, maxYear: 15  },
+      { names: ['明治', 'めいじ', 'meiji',  'm'], start: 1868, end: 1912,  maxYear: 45  },
+    ];
+
+    function convert(raw) {
+      const input = raw.trim();
+      if (!input) return null;
+
+      // 数字の全角→半角
+      const normalized = input.replace(/[０-９]/g, c =>
+        String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+      );
+
+      for (const era of ERAS) {
+        for (const name of era.names) {
+          const pattern = new RegExp(
+            '^' + name + '\\s*(\\d+)\\s*年?$',
+            'i'
+          );
+          const match = normalized.match(pattern);
+          if (match) {
+            const eraYear = parseInt(match[1], 10);
+            if (eraYear < 1) return { error: `${era.names[0]}は1年以上を指定してください` };
+            if (era.maxYear && eraYear > era.maxYear) {
+              return { error: `${era.names[0]}は${era.maxYear}年までです` };
+            }
+            const western = era.start + eraYear - 1;
+            return { result: western, eraName: era.names[0], eraYear };
+          }
+        }
+      }
+
+      return { error: '認識できない形式です。例：令和9年、平成30、昭和64' };
+    }
+
+    const inputEl   = document.getElementById('input');
+    const resultBox = document.getElementById('resultBox');
+    const resultText = document.getElementById('resultText');
+
+    function showResult(value) {
+      if (value === null) {
+        resultBox.className = 'result-box empty';
+        resultText.textContent = '変換結果がここに表示されます';
+        return;
+      }
+      if (value.error) {
+        resultBox.className = 'result-box error';
+        resultText.textContent = value.error;
+        return;
+      }
+      resultBox.className = 'result-box';
+      resultText.textContent =
+        `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年`;
+    }
+
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        showResult(convert(inputEl.value));
+      }
+    });
+
+    inputEl.addEventListener('input', () => {
+      if (inputEl.value.trim() === '') showResult(null);
+    });
+  </script>
+</body>
+</html>
