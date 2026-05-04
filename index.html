@@ -133,12 +133,19 @@
       padding: 6px 10px;
       border-radius: 6px;
     }
+
+    .version {
+      text-align: right;
+      font-size: 0.72rem;
+      color: #cbd5e0;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>年号変換アプリ</h1>
-    <p class="subtitle">元号・年を入力してEnterを押してください</p>
+    <p class="subtitle">元号・年を入力してください</p>
 
     <label for="input">元号と年を入力</label>
     <input
@@ -163,9 +170,11 @@
         <div class="era-item">明治 (M) — 1868〜1912年</div>
       </div>
     </div>
+    <p class="version" id="versionLabel"></p>
   </div>
 
   <script>
+    const VERSION = '1.2.0';
     const ERAS = [
       { names: ['令和', 'れいわ', 'reiwa', 'r'], start: 2019, end: null,    maxYear: null },
       { names: ['平成', 'へいせい', 'heisei', 'h'], start: 1989, end: 2019,  maxYear: 31  },
@@ -224,6 +233,8 @@
       resultText.textContent =
         `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年`;
     }
+
+    document.getElementById('versionLabel').textContent = `v${VERSION}`;
 
     inputEl.addEventListener('input', () => {
       showResult(convert(inputEl.value));
