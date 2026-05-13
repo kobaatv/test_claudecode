@@ -40,7 +40,7 @@
       text-align: center;
       color: #718096;
       font-size: 0.9rem;
-      margin-bottom: 32px;
+      margin-bottom: 12px;
     }
 
     label {
@@ -134,6 +134,16 @@
       border-radius: 6px;
     }
 
+    .this-year {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #4a5568;
+      background: #f7fafc;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 24px;
+    }
+
     .version {
       text-align: right;
       font-size: 0.72rem;
@@ -146,6 +156,7 @@
   <div class="card">
     <h1>年号変換アプリ</h1>
     <p class="subtitle">元号・年を入力してください</p>
+    <p class="this-year" id="thisYear"></p>
 
     <label for="input">元号と年を入力</label>
     <input
@@ -174,7 +185,7 @@
   </div>
 
   <script>
-    const VERSION = '1.3.0';
+    const VERSION = '1.4.0';
     const ERAS = [
       { names: ['令和', 'れいわ', 'reiwa', 'r'], start: 2019, end: null,    maxYear: null },
       { names: ['平成', 'へいせい', 'heisei', 'h'], start: 1989, end: 2019,  maxYear: 31  },
@@ -252,6 +263,12 @@
     }
 
     document.getElementById('versionLabel').textContent = `v${VERSION}`;
+
+    const era = currentEra();
+    const thisWestern = new Date().getFullYear();
+    const thisEraYear = thisWestern - era.start + 1;
+    document.getElementById('thisYear').textContent =
+      `今年は ${era.names[0]}${thisEraYear}年 = 西暦${thisWestern}年`;
 
     inputEl.addEventListener('input', () => {
       showResult(convert(inputEl.value));
