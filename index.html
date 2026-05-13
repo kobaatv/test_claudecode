@@ -204,7 +204,7 @@
   </div>
 
   <script>
-    const VERSION = '1.5.0';
+    const VERSION = '1.6.0';
     const ERAS = [
       { names: ['令和', 'れいわ', 'reiwa', 'r'], start: 2019, end: null,    maxYear: null },
       { names: ['平成', 'へいせい', 'heisei', 'h'], start: 1989, end: 2019,  maxYear: 31  },
@@ -228,11 +228,17 @@
 
       const numberOnly = normalized.match(/^(\d+)\s*年?$/);
       if (numberOnly) {
+        const num = parseInt(numberOnly[1], 10);
+        if (num < 1) return { error: '1以上の数値を入力してください' };
+        if (num > 80) {
+          const era = ERAS.find(e => e.start <= num && (e.end === null || num < e.end));
+          if (!era) return { error: `西暦${num}年は対応範囲外です` };
+          const eraYear = num - era.start + 1;
+          return { result: num, eraName: era.names[0], eraYear, westernInput: true };
+        }
         const era = currentEra();
-        const eraYear = parseInt(numberOnly[1], 10);
-        if (eraYear < 1) return { error: `${era.names[0]}は1年以上を指定してください` };
-        const western = era.start + eraYear - 1;
-        return { result: western, eraName: era.names[0], eraYear, assumed: true };
+        const western = era.start + num - 1;
+        return { result: western, eraName: era.names[0], eraYear: num, assumed: true };
       }
 
       for (const era of ERAS) {
@@ -273,10 +279,16 @@
         return;
       }
       resultBox.className = 'result-box';
-      const assumed = value.assumed ? `（${value.eraName}${value.eraYear}年と解釈）` : '';
-      resultText.innerHTML =
-        `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年` +
-        (assumed ? `<br><span style="font-size:0.7em;font-weight:400;color:#4a90d9">${assumed}</span>` : '');
+      if (value.westernInput) {
+        resultText.innerHTML =
+          `西暦 ${value.result}年  →  ${value.eraName}${value.eraYear}年` +
+          `<br><span style="font-size:0.7em;font-weight:400;color:#4a90d9">（西暦${value.result}年と解釈）</span>`;
+      } else {
+        const assumed = value.assumed ? `（${value.eraName}${value.eraYear}年と解釈）` : '';
+        resultText.innerHTML =
+          `${value.eraName}${value.eraYear}年  →  西暦 ${value.result}年` +
+          (assumed ? `<br><span style="font-size:0.7em;font-weight:400;color:#4a90d9">${assumed}</span>` : '');
+      }
     }
 
     document.getElementById('versionLabel').textContent = `v${VERSION}`;
