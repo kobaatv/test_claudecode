@@ -27,6 +27,7 @@
       padding: 40px 48px;
       width: 100%;
       max-width: 480px;
+      position: relative;
     }
 
     h1 {
@@ -135,13 +136,31 @@
     }
 
     .this-year {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #4a5568;
-      background: #f7fafc;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 24px;
+      position: absolute;
+      top: -10px;
+      left: 20px;
+      background: #f6c90e;
+      color: #1a202c;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 6px 14px 8px;
+      border-radius: 4px 4px 6px 6px;
+      box-shadow: 2px 3px 6px rgba(0,0,0,0.2);
+      transform: rotate(-2deg);
+      letter-spacing: 0.02em;
+      z-index: 1;
+    }
+
+    .this-year::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 4px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 2px;
     }
 
     .version {
@@ -154,9 +173,9 @@
 </head>
 <body>
   <div class="card">
+    <p class="this-year" id="thisYear"></p>
     <h1>年号変換アプリ</h1>
     <p class="subtitle">元号・年を入力してください</p>
-    <p class="this-year" id="thisYear"></p>
 
     <label for="input">元号と年を入力</label>
     <input
@@ -185,7 +204,7 @@
   </div>
 
   <script>
-    const VERSION = '1.4.0';
+    const VERSION = '1.5.0';
     const ERAS = [
       { names: ['令和', 'れいわ', 'reiwa', 'r'], start: 2019, end: null,    maxYear: null },
       { names: ['平成', 'へいせい', 'heisei', 'h'], start: 1989, end: 2019,  maxYear: 31  },
@@ -203,12 +222,10 @@
       const input = raw.trim();
       if (!input) return null;
 
-      // 数字の全角→半角
       const normalized = input.replace(/[０-９]/g, c =>
         String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
       );
 
-      // 数字のみの場合は今の年号で補完
       const numberOnly = normalized.match(/^(\d+)\s*年?$/);
       if (numberOnly) {
         const era = currentEra();
